@@ -1,7 +1,8 @@
 import numpy as np
 
 
-def sms_diag(matrix):
+def cda_matrix(matrix):
+    """Returns the upper, centre and lower diagonal of a matrix. Takes a matrix as input. Must be array."""
     if not isinstance(matrix, np.ndarray):
         raise TypeError('Matrix must be of type ndarray')
 
@@ -14,13 +15,14 @@ def sms_diag(matrix):
 ###############################################################################
 
 def trifactor(a, d, c):
+    """Calculates the LU factorization of a strictly diagonal matrix. The function takes a, d, c as inputs where all
+    are arrays of length n-1, n, n-1."""
     n = len(d)
     if len(a) != n-1 or len(c) != n-1:
         raise IndexError('a and c must have length n-1 where n is length of d')
 
-    u = d
-    l = a
-    print(l.dtype)
+    u = d.astype(np.float)
+    l = a.astype(np.float)
     for k in range(n-1):
         l[k] = a[k]/u[k]
         u[k+1] = d[k+1]-l[k]*c[k]
@@ -29,6 +31,21 @@ def trifactor(a, d, c):
 
 ###############################################################################
 
-#def trisolve(l, u, c, b):
+def trisolve(l, u, c, b):
+    """Function takes l, u, c from trifactor and a set of vectors b. Solves the equation Ax = B for x"""
+    if b.ndim == 1:
+        b = np.reshape(b, (len(b), 1))
+    x = b
+    n = np.size(b, 0)
+    for k in range(1, n):
+        x[k, :] = b[k, :] - l[k-1]*x[k-1, :]
 
+    x[n-1, :] = x[n-1, :]/u[n-1]
+    for k in range(n-2, -1, -1):
+        x[k, :] = (x[k, :] - c[k]*x[k+1, :])/u[k]
+
+    return x
+
+l, u, c = trifactor(np.array([1., 1.]), np.array([4., 4., 4.]), np.array([1., 1.]))
+print(trisolve(l, u, c, np.array([1., 1., 1.])))
 
